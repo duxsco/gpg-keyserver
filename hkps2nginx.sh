@@ -52,12 +52,7 @@ done
 gpgconf --homedir "${TEMP_GPG_HOMEDIR}" --kill all
 
 cat <<EOF
-location ~ ^/(.*)\.asc$ {
-
-    if (\$request_uri !~ "^/($( IFS="|"; echo "${GPG_KEY_IDS[*]}" )).asc$") {
-        return 404;
-    }
-
+location ~ "^/([A-F0-9]{40})\.asc$" {
     add_header content-disposition "attachment; filename=\$1.asc";
     default_type application/pgp-keys;
     root ${NGINX_KEYS_WEBROOT};
