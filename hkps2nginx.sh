@@ -6,12 +6,14 @@ function help() {
     cat <<EOF
 
 Execute:
-$ bash ${0##*\/} -l localPublicKeyFile.asc -r fullPathToPublicKeyFileOnNginxServer
+$ bash ${0##*\/} -l localPublicKeysFile.asc -r NginxWebroot
 
 I personal use the WKD file. Example:
-$ gpg --export --armor maria.musterfrau@example.org > pubkey.asc
-$ bash ${0##*\/} -l pubkey.asc -r /var/www/openpgpkey_example/.well-known/openpgpkey/example.org/hu/asdfasdfasdfasdfasdfasdfasdfasdf
+$ gpg --export --armor maria.musterfrau@example.org work@example.org > pubkey.asc
+$ bash ${0##*\/} -l pubkey.asc -r /var/www/keys/
 
+To indent using tabs:
+$ bash ${0##*\/} -l pubkey.asc -r /var/www/keys/ | sed 's/    /\t/g' | sed 's/^\([^$]\)/\t\t\1/'
 EOF
 
     return 1
@@ -20,27 +22,45 @@ EOF
 while getopts l:r:h opt; do
     case $opt in
         l) LOCAL_PUBLIC_KEY_FILE="${OPTARG}";;
-        r) NGINX_ABSOLUTE_FILE_PATH="${OPTARG}";;
+        r) NGINX_KEYS_WEBROOT="${OPTARG}";;
         h|?) help;;
     esac
 done
 
-if [ -z ${LOCAL_PUBLIC_KEY_FILE+x} ] || [ -z ${NGINX_ABSOLUTE_FILE_PATH+x} ]; then
+if [ -z ${LOCAL_PUBLIC_KEY_FILE+x} ] || [ -z ${NGINX_KEYS_WEBROOT+x} ]; then
     help
 fi
 
-KEYS="$(gpg --with-colons --show-keys "${LOCAL_PUBLIC_KEY_FILE}")"
-GPG_REGEX="$(
-    paste -d '|' -s <(
+TEMP_GPG_HOMEDIR="$(mktemp -d)"
+declare -A GPG_REGEX
+
+gpg --quiet --homedir "${TEMP_GPG_HOMEDIR}" --import "${LOCAL_PUBLIC_KEY_FILE}"
+readarray -t GPG_KEY_IDS < <(gpg --homedir "${TEMP_GPG_HOMEDIR}" --list-options show-only-fpr-mbox --list-keys | awk '{print $1}')
+
+for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
+    COLONS_OUTPUT="$(gpg --homedir "${TEMP_GPG_HOMEDIR}" --with-colons --list-keys "${SINGLE_GPG_KEY_ID}")"
+    GPG_REGEX["${SINGLE_GPG_KEY_ID}"]="$(
         paste -d '|' -s <(
-            grep "^fpr:" <<<"${KEYS}" | cut -d: -f10
-            grep -e "^pub:" -e "^sub:" <<<"${KEYS}" | cut -d: -f5
-        ) | sed -e 's/^/(/' -e 's/$/)/' -e 's/^/(0x|)/'
-        grep "^uid:" <<<"${KEYS}" | cut -d: -f10 | awk -F'[<>]' '{print $2}' | paste -d '|' -s -  | tr -d '\n'
-) | sed -e 's/^/(/' -e 's/$/)/')"
-KEY_ID="$(gpg --list-options show-only-fpr-mbox --show-keys "${LOCAL_PUBLIC_KEY_FILE}" | awk '{print $1}')"
+            paste -d '|' -s <(
+                grep "^fpr:" <<<"${COLONS_OUTPUT}" | cut -d: -f10
+                grep -e "^pub:" -e "^sub:" <<<"${COLONS_OUTPUT}" | cut -d: -f5
+            ) | sed -e 's/^/(/' -e 's/$/)/' -e 's/^/(0x|)/'
+            grep "^uid:" <<<"${COLONS_OUTPUT}" | cut -d: -f10 | awk -F'[<>]' '{print $2}' | paste -d '|' -s -  | tr -d '\n'
+    ) | sed -e 's/^/(/' -e 's/$/)/')"
+done
 
 cat <<EOF
+location ~ ^/(.*)\.asc$ {
+
+    if (\$request_uri !~ "^/($( IFS="|"; echo "${GPG_KEY_IDS[*]}" )).asc$") {
+        return 404;
+    }
+
+    add_header content-disposition "attachment; filename=\$1.asc";
+    default_type application/pgp-keys;
+    root ${NGINX_KEYS_WEBROOT};
+}
+
 location = /pks/lookup {
 
     if (\$query_string !~ "^(.+&op=get&.+|.+&op=get|op=get&.+)$") {
@@ -50,13 +70,20 @@ location = /pks/lookup {
     if (\$query_string !~ "^(.+&search=.+&.+|.+&search=.+|search=.+&.+)$") {
         return 501;
     }
+EOF
 
-    if (\$query_string !~* "^((.+&|)op=get(&|&.+&)search=${GPG_REGEX}(&.+|)|(.+&|)search=${GPG_REGEX}(&|&.+&)op=get(&.+|))$") {
-        return 404;
+for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
+    cat <<EOF
+
+    if (\$query_string ~* "^((.+&|)op=get(&|&.+&)search=${GPG_REGEX["${SINGLE_GPG_KEY_ID}"]}(&.+|)|(.+&|)search=${GPG_REGEX["${SINGLE_GPG_KEY_ID}"]}(&|&.+&)op=get(&.+|))$") {
+        return 301 /${SINGLE_GPG_KEY_ID}.asc;
     }
+EOF
 
-    add_header content-disposition "attachment; filename=${KEY_ID}.asc";
-    default_type application/pgp-keys;
-    alias "${NGINX_ABSOLUTE_FILE_PATH}";
+done
+
+cat <<EOF
+
+    return 404;
 }
 EOF

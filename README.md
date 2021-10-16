@@ -7,8 +7,8 @@ Following [draft RFC](https://datatracker.ietf.org/doc/html/draft-shaw-openpgp-h
 bash hkps2nginx.sh -h
 
 # I prefer using the same file for wkd and hkps. Sample run:
-gpg --export --armor maria.musterfrau@example.org > pubkey.asc
-bash hkps2nginx.sh -l "pubkey.asc" -r "/var/www/openpgpkey_example/.well-known/openpgpkey/example.org/hu/asdfasdfasdfasdfasdfasdfasdfasdf"
+gpg --export --armor maria.musterfrau@example.org work@example.org > pubkey.asc
+bash hkps2nginx.sh -l pubkey.asc -r /var/www/keys/
 ```
 
 You can visualise the regex in the `if` condition at [Debuggex](https://www.debuggex.com/). Example:
