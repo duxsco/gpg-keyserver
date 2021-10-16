@@ -1,4 +1,4 @@
-# KISS-like GnuPG keyserver
+# KISS-like, self-hosted GnuPG keyserver
 
 Following [draft RFC](https://datatracker.ietf.org/doc/html/draft-shaw-openpgp-hkp-00), `hkps2nginx.sh` creates the Nginx configuration for hosting your own GnuPG keyserver which allows only for retrieval of public keys (no sks-like sync, no upload, no index, no vindex):
 
