@@ -3,12 +3,17 @@
 Following [draft RFC](https://datatracker.ietf.org/doc/html/draft-shaw-openpgp-hkp-00), `hkps2nginx.sh` creates the Nginx configuration for hosting your own GnuPG keyserver which allows only for retrieval of public keys (no sks-like sync, no upload, no index, no vindex):
 
 ```bash
-# print help
 bash hkps2nginx.sh -h
 
-# I prefer using the same file for wkd and hkps. Sample run:
-gpg --export --armor maria.musterfrau@example.org work@example.org > pubkey.asc
-bash hkps2nginx.sh -l pubkey.asc -r /var/www/keys/
+Execute:
+$ bash hkps2nginx.sh -l localPublicKeysFile.asc -r NginxWebroot
+
+Example:
+$ gpg --export --armor maria.musterfrau@example.org work@example.org > pubkey.asc
+$ bash hkps2nginx.sh -l pubkey.asc -r /var/www/keys/
+
+To indent using tabs:
+$ bash hkps2nginx.sh -l pubkey.asc -r /var/www/keys/ | sed 's/    /\t/g' | sed 's/^\([^$]\)/\t\t\1/'
 ```
 
 You can visualise the regex in the `if` condition at [Debuggex](https://www.debuggex.com/). Example:

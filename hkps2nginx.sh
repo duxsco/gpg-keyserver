@@ -8,7 +8,7 @@ function help() {
 Execute:
 $ bash ${0##*\/} -l localPublicKeysFile.asc -r NginxWebroot
 
-I personal use the WKD file. Example:
+Example:
 $ gpg --export --armor maria.musterfrau@example.org work@example.org > pubkey.asc
 $ bash ${0##*\/} -l pubkey.asc -r /var/www/keys/
 
