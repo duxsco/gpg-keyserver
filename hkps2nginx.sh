@@ -35,7 +35,7 @@ TEMP_GPG_HOMEDIR="$(mktemp -d)"
 declare -A GPG_REGEX
 
 gpg --quiet --homedir "${TEMP_GPG_HOMEDIR}" --import "${LOCAL_PUBLIC_KEY_FILE}"
-readarray -t GPG_KEY_IDS < <(gpg --homedir "${TEMP_GPG_HOMEDIR}" --list-options show-only-fpr-mbox --list-keys | awk '{print $1}')
+readarray -t GPG_KEY_IDS < <(gpg --homedir "${TEMP_GPG_HOMEDIR}" --with-colons --list-keys | grep -A1 "^pub:" | grep "^fpr:" | cut -d: -f10)
 
 for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
     COLONS_OUTPUT="$(gpg --homedir "${TEMP_GPG_HOMEDIR}" --with-colons --list-keys "${SINGLE_GPG_KEY_ID}")"
