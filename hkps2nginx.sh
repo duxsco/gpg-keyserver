@@ -49,6 +49,8 @@ for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
     ) | sed -e 's/^/(/' -e 's/$/)/')"
 done
 
+gpgconf --homedir "${TEMP_GPG_HOMEDIR}" --kill all
+
 cat <<EOF
 location ~ ^/(.*)\.asc$ {
 
