@@ -15,6 +15,12 @@ You can visualise the regex in the `if` condition at [Debuggex](https://www.debu
 
 ![Debuggex](assets/debuggex.png)
 
+I used `hkps2nginx.sh` to setup my Nginx server for `hkps`. You can try out my keyserver:
+
+- URL: hkps://keys.duxco.de
+- E-Mail: d at "my github username" dot de
+- Key ID in `0xlong`: 0x11BE5F68440E0758
+
 ## DNS record
 
 You can add the following DNS record for others to find your keyserver:
