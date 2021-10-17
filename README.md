@@ -69,7 +69,7 @@ I used `hkps2nginx.sh` to setup my Nginx server for `hkps`. You can try out my k
 
 ## DNS record
 
-You can add the following DNS record for others to find your keyserver:
+You can add the following DNS record for others to better find your keyserver:
 
 ```
 _hkps._tcp.example.org. 300 IN SRV 1 1 443 keys.example.org.
