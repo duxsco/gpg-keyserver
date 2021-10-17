@@ -60,11 +60,23 @@ location ~ "^/([A-F0-9]{40})\.asc$" {
 
 location = /pks/lookup {
 
-    if (\$query_string !~ "^(.+&op=get&.+|.+&op=get|op=get&.+)$") {
+    # if query doesn't contain "op=get"
+    if (\$query_string !~ "^(.+&)*op=get(&.+)*$") {
         return 501;
     }
 
-    if (\$query_string !~ "^(.+&search=.+&.+|.+&search=.+|search=.+&.+)$") {
+    # if query doesn't contain "search=..."
+    if (\$query_string !~ "^(.+&)*search=((0x|)([0-9a-fA-F]{8}|[0-9a-fA-F]{16}|[0-9a-fA-F]{40})|.+@.+)(&.+)*$") {
+        return 501;
+    }
+
+    # if query contains more than one "op=get"
+    if (\$query_string ~ "^(.+&)*op=.+&(.+&)*op=.+(&.+)*$") {
+        return 501;
+    }
+
+    # if query contains more than one "search=..."
+    if (\$query_string ~ "^(.+&)*search=.+&(.+&)*search=.+(&.+)*$") {
         return 501;
     }
 EOF
@@ -72,7 +84,7 @@ EOF
 for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
     cat <<EOF
 
-    if (\$query_string ~* "^((.+&|)op=get(&|&.+&)search=${GPG_REGEX["${SINGLE_GPG_KEY_ID}"]}(&.+|)|(.+&|)search=${GPG_REGEX["${SINGLE_GPG_KEY_ID}"]}(&|&.+&)op=get(&.+|))$") {
+    if (\$query_string ~* "^(.+&)*search=${GPG_REGEX["${SINGLE_GPG_KEY_ID}"]}(&.+)*$") {
         return 301 /${SINGLE_GPG_KEY_ID}.asc;
     }
 EOF

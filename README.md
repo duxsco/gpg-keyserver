@@ -37,20 +37,32 @@ location ~ "^/([A-F0-9]{40})\.asc$" {
 
 location = /pks/lookup {
 
-    if ($query_string !~ "^(.+&op=get&.+|.+&op=get|op=get&.+)$") {
+    # if query doesn't contain "op=get"
+    if ($query_string !~ "^(.+&)*op=get(&.+)*$") {
         return 501;
     }
 
-    if ($query_string !~ "^(.+&search=.+&.+|.+&search=.+|search=.+&.+)$") {
+    # if query doesn't contain "search=..."
+    if ($query_string !~ "^(.+&)*search=((0x|)([0-9a-fA-F]{8}|[0-9a-fA-F]{16}|[0-9a-fA-F]{40})|.+@.+)(&.+)*$") {
         return 501;
     }
 
-    if ($query_string ~* "^((.+&|)op=get(&|&.+&)search=((0x|)(8DFB189CC3CB185E11EAAC9D7C08B736C1633B42|8C3DEF348CB137FD8738DDC94026E4D290126DCC|62050246C4646021A3FE09A57B7B0F3EDE5BEC71|4397EFC99AADC1E6A322595EB4B5FCD11440A0E1|7C08B736C1633B42|4026E4D290126DCC|7B7B0F3EDE5BEC71|B4B5FCD11440A0E1)|maria.musterfrau@example.org|maria.musterfrau@example.de|maria.musterfrau@example.eu)(&.+|)|(.+&|)search=((0x|)(8DFB189CC3CB185E11EAAC9D7C08B736C1633B42|8C3DEF348CB137FD8738DDC94026E4D290126DCC|62050246C4646021A3FE09A57B7B0F3EDE5BEC71|4397EFC99AADC1E6A322595EB4B5FCD11440A0E1|7C08B736C1633B42|4026E4D290126DCC|7B7B0F3EDE5BEC71|B4B5FCD11440A0E1)|maria.musterfrau@example.org|maria.musterfrau@example.de|maria.musterfrau@example.eu)(&|&.+&)op=get(&.+|))$") {
-        return 301 /8DFB189CC3CB185E11EAAC9D7C08B736C1633B42.asc;
+    # if query contains more than one "op=get"
+    if ($query_string ~ "^(.+&)*op=.+&(.+&)*op=.+(&.+)*$") {
+        return 501;
     }
 
-    if ($query_string ~* "^((.+&|)op=get(&|&.+&)search=((0x|)(EB4C43523D4D115FC3819DB0B4E73D7875EAECEF|0B33887A90261BBD0770974A93C54FB4E75F996E|7EB84A3614483BB36E0DAB458DC7A31A1E2268F1|3B2445AB428E0BE4BB55D59253728297B1A6C888|B4E73D7875EAECEF|93C54FB4E75F996E|8DC7A31A1E2268F1|53728297B1A6C888)|work@example.org)(&.+|)|(.+&|)search=((0x|)(EB4C43523D4D115FC3819DB0B4E73D7875EAECEF|0B33887A90261BBD0770974A93C54FB4E75F996E|7EB84A3614483BB36E0DAB458DC7A31A1E2268F1|3B2445AB428E0BE4BB55D59253728297B1A6C888|B4E73D7875EAECEF|93C54FB4E75F996E|8DC7A31A1E2268F1|53728297B1A6C888)|work@example.org)(&|&.+&)op=get(&.+|))$") {
-        return 301 /EB4C43523D4D115FC3819DB0B4E73D7875EAECEF.asc;
+    # if query contains more than one "search=..."
+    if ($query_string ~ "^(.+&)*search=.+&(.+&)*search=.+(&.+)*$") {
+        return 501;
+    }
+
+    if ($query_string ~* "^(.+&)*search=((0x|)(1552039680E363B8C9E61E8767F69C9BF8BEBDC1|CBFD171DF4325713DD1DC6D3A3CCC518A400E998|80B62052C49EC83AE7BBEBC3346FA0A413E510BE|D26135CB6BADF739F99DB112BDA1E4163012236E|67F69C9BF8BEBDC1|A3CCC518A400E998|346FA0A413E510BE|BDA1E4163012236E)|maria.musterfrau@example.org|maria.musterfrau@example.de|maria.musterfrau@example.eu)(&.+)*$") {
+        return 301 /1552039680E363B8C9E61E8767F69C9BF8BEBDC1.asc;
+    }
+
+    if ($query_string ~* "^(.+&)*search=((0x|)(78284C877D61FEDA65FDAB0AECB43B18C6B8E88E|02B63F8A914E81A16DD72A0A24489B037578FBE6|20D29AEC0CF8A7E07AE842BE5D518CAC4D3A9177|653A9BFF0A1A48730B3556AA0E23B2FE2EBC40DE|ECB43B18C6B8E88E|24489B037578FBE6|5D518CAC4D3A9177|0E23B2FE2EBC40DE)|work@example.org)(&.+)*$") {
+        return 301 /78284C877D61FEDA65FDAB0AECB43B18C6B8E88E.asc;
     }
 
     return 404;
