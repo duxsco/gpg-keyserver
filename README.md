@@ -73,7 +73,7 @@ You can visualise the regex in the `if` condition at [Debuggex](https://www.debu
 
 ![Debuggex](assets/debuggex.png)
 
-I used `hkps2nginx.sh` to setup my Nginx server for `hkps`. You can try out my keyserver:
+I used `hkps2nginx.sh` to setup my Nginx server for `HKPS`. You can try out my keyserver:
 
 - URL: hkps://keys.duxco.de
 - E-Mail: d at "my github username" dot de
