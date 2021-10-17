@@ -79,6 +79,41 @@ I used `hkps2nginx.sh` to setup my Nginx server for `HKPS`. You can try out my k
 - E-Mail: d at "my github username" dot de
 - Key ID in `0xlong`: 0x11BE5F68440E0758
 
+## Verification of public key delivery
+
+You can retrieve a GnuPG public key from `HKPS` using e-mail addresses:
+
+```bash
+gpg --auto-key-locate clear,hkps://keys.example.org --locate-external-keys maria.musterfrau@example.org work@example.org
+```
+
+... or via hexadecimal identifiers with/without `0x` prefix and, of course, without spaces:
+
+![key ids](assets/key_ids.png)
+
+Beside running above `--locate-external-keys` command for every of your e-mail addresses you should check whether your public key is retrievable with hex identifiers. First, specify the public keys you want to run a check upon and the `HKPS` server your want to retrieve them from:
+
+```bash
+IDS="maria.musterfrau@example.org work@example.org"
+HKPS="hkps://keys.example.org"
+```
+
+Then, copy&paste into your terminal and run:
+
+```bash
+gpg --with-colons --list-keys ${IDS} | \
+    grep -e "^pub:" -e "^sub:" -e "^fpr:" | \
+    cut -d: -f5-10 | \
+    sed "s/^\([^:]*\):[^:]\(.*\)/\1/" | \
+    tr -d ":" | \
+    sed 's/\(.*\)/\1\n0x\1/' | \
+    while read I; do
+        gpg --quiet --keyserver "${HKPS}" --recv-keys "$I" &&
+            echo "$I: ✅" || \
+            echo "$I: ❌"
+    done
+```
+
 ## DNS record
 
 You can add the following DNS record for others to better find your keyserver:
