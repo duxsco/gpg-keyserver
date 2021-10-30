@@ -87,11 +87,11 @@ You can retrieve a GnuPG public key from `HKPS` using e-mail addresses:
 gpg --auto-key-locate clear,hkps://keys.example.org --locate-external-keys maria.musterfrau@example.org work@example.org
 ```
 
-... or via hexadecimal identifiers with/without `0x` prefix and, of course, without spaces:
+... or via hexadecimal identifiers with/without `0x` prefix and, of course, without whitespace:
 
 ![key ids](assets/key_ids.png)
 
-Beside running above `--locate-external-keys` command for every of your e-mail addresses you should check whether your public key is retrievable with hex identifiers. First, specify the public keys you want to run a check upon and the `HKPS` server your want to retrieve them from:
+Beside running above `--locate-external-keys` command for every of your e-mail addresses you should check whether your public key is retrievable with hex identifiers. First, specify the public keys you want to run a check upon and the `HKPS` server you want to retrieve them from. The commands expect you to have the public keys pre-imported.
 
 ```bash
 IDS="maria.musterfrau@example.org work@example.org"
