@@ -114,13 +114,15 @@ gpg --with-colons --list-keys ${IDS} | \
     done
 ```
 
-## DNS record
+## Publication of GnuPG keyserver
 
 You can add the following DNS record for others to better find your keyserver:
 
 ```
 _hkps._tcp.example.org. 300 IN SRV 1 1 443 keys.example.org.
 ```
+
+Furthermore, you can add [sig-keyserver-url](https://github.com/duxsco/gpg-config-and-scripts/search?q=sig-keyserver-url) to your `~/.gnupg/gpg.conf`.
 
 ## Other GnuPG repos
 
