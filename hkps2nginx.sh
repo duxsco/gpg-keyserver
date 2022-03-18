@@ -27,7 +27,7 @@ while getopts l:r:h opt; do
     esac
 done
 
-if [ -z ${LOCAL_PUBLIC_KEY_FILE+x} ] || [ -z ${NGINX_KEYS_WEBROOT+x} ]; then
+if [[ -z ${LOCAL_PUBLIC_KEY_FILE} ]] || [[ -z ${NGINX_KEYS_WEBROOT} ]]; then
     help
 fi
 
