@@ -119,6 +119,8 @@ gpg --with-colons --list-keys ${IDS} | \
 You can add the following DNS record for others to better find your keyserver:
 
 ```
+$ delv +nodnssec SRV _hkps._tcp.example.org
+; fully validated
 _hkps._tcp.example.org. 300 IN SRV 1 1 443 keys.example.org.
 ```
 
