@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+# Prevent tainting variables via environment
+# See: https://gist.github.com/duxsco/fad211d5828e09d0391f018834f955c9
+unset COLONS_OUTPUT GPG_KEY_IDS GPG_REGEX LOCAL_PUBLIC_KEY_FILE NGINX_KEYS_WEBROOT SINGLE_GPG_KEY_ID TEMP_GPG_HOMEDIR
 
 function help() {
     cat <<EOF
@@ -15,20 +17,20 @@ $ bash ${0##*\/} -l pubkey.asc -r /var/www/keys/
 To indent using tabs:
 $ bash ${0##*\/} -l pubkey.asc -r /var/www/keys/ | sed 's/    /\t/g' | sed 's/^\([^$]\)/\t\t\1/'
 EOF
-
-    return 1
 }
 
 while getopts l:r:h opt; do
     case $opt in
-        l) LOCAL_PUBLIC_KEY_FILE="${OPTARG}";;
-        r) NGINX_KEYS_WEBROOT="${OPTARG}";;
-        h|?) help;;
+        l) LOCAL_PUBLIC_KEY_FILE="$OPTARG";;
+        r) NGINX_KEYS_WEBROOT="$OPTARG";;
+        h) help; exit 0;;
+        ?) help; exit 1;;
     esac
 done
 
 if [[ -z ${LOCAL_PUBLIC_KEY_FILE} ]] || [[ -z ${NGINX_KEYS_WEBROOT} ]]; then
     help
+    exit 1
 fi
 
 TEMP_GPG_HOMEDIR="$(mktemp -d)"
@@ -39,7 +41,7 @@ readarray -t GPG_KEY_IDS < <(gpg --homedir "${TEMP_GPG_HOMEDIR}" --with-colons -
 
 for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
     COLONS_OUTPUT="$(gpg --homedir "${TEMP_GPG_HOMEDIR}" --with-colons --list-keys "${SINGLE_GPG_KEY_ID}")"
-    GPG_REGEX["${SINGLE_GPG_KEY_ID}"]="$(
+    GPG_REGEX[$SINGLE_GPG_KEY_ID]="$(
         paste -d '|' -s <(
             paste -d '|' -s <(
                 grep "^fpr:" <<<"${COLONS_OUTPUT}" | cut -d: -f10
@@ -84,7 +86,7 @@ EOF
 for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
     cat <<EOF
 
-    if (\$query_string ~* "^(.+&)*search=${GPG_REGEX["${SINGLE_GPG_KEY_ID}"]}(&.+)*\$") {
+    if (\$query_string ~* "^(.+&)*search=${GPG_REGEX[$SINGLE_GPG_KEY_ID]}(&.+)*\$") {
         return 301 /${SINGLE_GPG_KEY_ID}.asc;
     }
 EOF
