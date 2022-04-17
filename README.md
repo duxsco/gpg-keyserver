@@ -57,12 +57,12 @@ location = /pks/lookup {
         return 501;
     }
 
-    if ($query_string ~* "^(.+&)*search=((0x|)(1552039680E363B8C9E61E8767F69C9BF8BEBDC1|CBFD171DF4325713DD1DC6D3A3CCC518A400E998|80B62052C49EC83AE7BBEBC3346FA0A413E510BE|D26135CB6BADF739F99DB112BDA1E4163012236E|67F69C9BF8BEBDC1|A3CCC518A400E998|346FA0A413E510BE|BDA1E4163012236E)|maria.musterfrau@example.org|maria.musterfrau@example.de|maria.musterfrau@example.eu)(&.+)*$") {
-        return 301 /1552039680E363B8C9E61E8767F69C9BF8BEBDC1.asc;
+    if ($query_string ~* "^(.+&)*search=((0x|)(68669BDF2F787AE593115FDD9DEC9F9C5E587974|86615A9CC67D206645ACAFB42992799FB82E4BFB|1DD5D9EDE1203A39365C1894BC35F9A0C5FBA5C7|B6F039EA839BE75AB2B7204BA2217B8B48F41A2C|9DEC9F9C5E587974|2992799FB82E4BFB|BC35F9A0C5FBA5C7|A2217B8B48F41A2C|5E587974|B82E4BFB|C5FBA5C7|48F41A2C)|maria.musterfrau@example.de|maria.musterfrau@example.eu|maria.musterfrau@example.org)(&.+)*$") {
+        return 301 /68669BDF2F787AE593115FDD9DEC9F9C5E587974.asc;
     }
 
-    if ($query_string ~* "^(.+&)*search=((0x|)(78284C877D61FEDA65FDAB0AECB43B18C6B8E88E|02B63F8A914E81A16DD72A0A24489B037578FBE6|20D29AEC0CF8A7E07AE842BE5D518CAC4D3A9177|653A9BFF0A1A48730B3556AA0E23B2FE2EBC40DE|ECB43B18C6B8E88E|24489B037578FBE6|5D518CAC4D3A9177|0E23B2FE2EBC40DE)|work@example.org)(&.+)*$") {
-        return 301 /78284C877D61FEDA65FDAB0AECB43B18C6B8E88E.asc;
+    if ($query_string ~* "^(.+&)*search=((0x|)(46E6C639E0F6A012AEA11683B8DD0599EDDA35AA|E86700A4C56A138EC54929D6D02E34BE663E6091|3AAF5CDAC88DAFFFF2A069A74D189EE4A6DE96F3|506CD61215D8CCBF7F458A44204443AA16CD9EF4|B8DD0599EDDA35AA|D02E34BE663E6091|4D189EE4A6DE96F3|204443AA16CD9EF4|EDDA35AA|663E6091|A6DE96F3|16CD9EF4)|max.mustermann@example.org)(&.+)*$") {
+        return 301 /46E6C639E0F6A012AEA11683B8DD0599EDDA35AA.asc;
     }
 
     return 404;
@@ -89,7 +89,9 @@ gpg --auto-key-locate clear,hkps://keys.example.org --locate-external-keys maria
 
 ... or via hexadecimal identifiers with/without `0x` prefix and, of course, without whitespace:
 
-![key ids](assets/key_ids.png)
+![Debuggex](assets/key_ids_00.png)
+
+![Debuggex](assets/key_ids_01.png)
 
 Beside running above `--locate-external-keys` command for every of your e-mail addresses you should check whether your public key is retrievable with hex identifiers. First, specify the public keys you want to run a check upon and the `HKPS` server you want to retrieve them from. The commands expect you to have the public keys pre-imported.
 
@@ -101,17 +103,18 @@ HKPS="hkps://keys.example.org"
 Then, copy&paste into your terminal and run:
 
 ```bash
-gpg --with-colons --list-keys ${IDS} | \
-    grep -e "^pub:" -e "^sub:" -e "^fpr:" | \
-    cut -d: -f5-10 | \
-    sed "s/^\([^:]*\):[^:]\(.*\)/\1/" | \
-    tr -d ":" | \
-    sed 's/\(.*\)/\1\n0x\1/' | \
-    while read I; do
-        gpg --quiet --keyserver "${HKPS}" --recv-keys "$I" &&
-            echo "$I: ✅" || \
-            echo "$I: ❌"
-    done
+COLONS_OUTPUT="$(gpg --with-colons --list-keys ${IDS})"
+(
+    grep "^fpr:" <<<"${COLONS_OUTPUT}" | cut -d: -f10
+    grep "^fpr:" <<<"${COLONS_OUTPUT}" | cut -d: -f10 | grep -Eo "^.{50}"
+    grep -e "^pub:" -e "^sub:" <<<"${COLONS_OUTPUT}" | cut -d: -f5
+    grep -e "^pub:" -e "^sub:" <<<"${COLONS_OUTPUT}" | cut -d: -f5 | grep -Eo ".{8}$"
+) | \
+while read -r I; do
+    gpg --quiet --keyserver "${HKPS}" --recv-keys "$I" &&
+        echo "$I: ✅" || \
+        echo "$I: ❌"
+done
 ```
 
 ## Publication of GnuPG keyserver
