@@ -45,6 +45,7 @@ for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
         paste -d '|' -s <(
             paste -d '|' -s <(
                 grep "^fpr:" <<<"${COLONS_OUTPUT}" | cut -d: -f10
+                grep "^fpr:" <<<"${COLONS_OUTPUT}" | cut -d: -f10 | grep -Eo "^.{50}"
                 grep -e "^pub:" -e "^sub:" <<<"${COLONS_OUTPUT}" | cut -d: -f5
                 grep -e "^pub:" -e "^sub:" <<<"${COLONS_OUTPUT}" | cut -d: -f5 | grep -Eo ".{8}$"
             ) | sed -e 's/^/(/' -e 's/$/)/' -e 's/^/(0x|)/'
