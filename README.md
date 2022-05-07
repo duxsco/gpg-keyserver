@@ -29,7 +29,7 @@ $ bash hkps2nginx.sh -l pubkey.asc -r /var/www/keys/ | sed 's/    /\t/g' | sed '
 Sample `bash hkps2nginx.sh -l pubkey.asc -r /var/www/keys/` output:
 
 ```bash
-location ~ "^/([A-F0-9]{40})\.asc$" {
+location ~ "^/([A-F0-9]{40}|[A-F0-9]{50})\.asc$" {
     add_header content-disposition "attachment; filename=$1.asc";
     default_type application/pgp-keys;
     root /var/www/keys/;
@@ -43,7 +43,7 @@ location = /pks/lookup {
     }
 
     # if query doesn't contain "search=..."
-    if ($query_string !~ "^(.+&)*search=((0x|)([0-9a-fA-F]{8}|[0-9a-fA-F]{16}|[0-9a-fA-F]{40})|.+@.+)(&.+)*$") {
+    if ($query_string !~ "^(.+&)*search=((0x|)([0-9a-fA-F]{8}|[0-9a-fA-F]{16}|[0-9a-fA-F]{40}|[0-9a-fA-F]{50})|.+@.+)(&.+)*$") {
         return 501;
     }
 

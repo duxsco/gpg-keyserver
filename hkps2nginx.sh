@@ -56,7 +56,7 @@ done
 gpgconf --homedir "${TEMP_GPG_HOMEDIR}" --kill all
 
 cat <<EOF
-location ~ "^/([A-F0-9]{40})\.asc\$" {
+location ~ "^/([A-F0-9]{40}|[0-9A-F]{50})\.asc\$" {
     add_header content-disposition "attachment; filename=\$1.asc";
     default_type application/pgp-keys;
     root ${NGINX_KEYS_WEBROOT};
@@ -70,7 +70,7 @@ location = /pks/lookup {
     }
 
     # if query doesn't contain "search=..."
-    if (\$query_string !~ "^(.+&)*search=((0x|)([0-9a-fA-F]{8}|[0-9a-fA-F]{16}|[0-9a-fA-F]{40})|.+@.+)(&.+)*\$") {
+    if (\$query_string !~ "^(.+&)*search=((0x|)([0-9a-fA-F]{8}|[0-9a-fA-F]{16}|[0-9a-fA-F]{40}|[0-9a-fA-F]{50})|.+@.+)(&.+)*\$") {
         return 501;
     }
 
