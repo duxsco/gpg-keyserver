@@ -48,12 +48,12 @@ location = /pks/lookup {
     }
 
     # if query contains more than one "op=get"
-    if ($query_string ~ "^(.+&)*op=.+&(.+&)*op=.+(&.+)*$") {
+    if ($query_string ~ "^(.+&)*op=(.+&)+op=.+(&.+)*$") {
         return 501;
     }
 
     # if query contains more than one "search=..."
-    if ($query_string ~ "^(.+&)*search=.+&(.+&)*search=.+(&.+)*$") {
+    if ($query_string ~ "^(.+&)*search=(.+&)+search=.+(&.+)*$") {
         return 501;
     }
 
