@@ -2,7 +2,7 @@
 
 # Prevent tainting variables via environment
 # See: https://gist.github.com/duxsco/fad211d5828e09d0391f018834f955c9
-unset COLONS_OUTPUT GPG_KEY_IDS GPG_REGEX LOCAL_PUBLIC_KEY_FILE NGINX_KEYS_WEBROOT SINGLE_GPG_KEY_ID TEMP_GPG_HOMEDIR
+unset colons_output gpg_key_ids gpg_regex local_public_key_file nginx_keys_webroot single_gpg_key_id temp_gpg_homedir
 
 function help() {
     cat <<EOF
@@ -21,45 +21,45 @@ EOF
 
 while getopts l:r:h opt; do
     case $opt in
-        l) LOCAL_PUBLIC_KEY_FILE="$OPTARG";;
-        r) NGINX_KEYS_WEBROOT="$OPTARG";;
+        l) local_public_key_file="$OPTARG";;
+        r) nginx_keys_webroot="$OPTARG";;
         h) help; exit 0;;
         ?) help; exit 1;;
     esac
 done
 
-if [[ -z ${LOCAL_PUBLIC_KEY_FILE} ]] || [[ -z ${NGINX_KEYS_WEBROOT} ]]; then
+if [[ -z ${local_public_key_file} ]] || [[ -z ${nginx_keys_webroot} ]]; then
     help
     exit 1
 fi
 
-TEMP_GPG_HOMEDIR="$(mktemp -d)"
-declare -A GPG_REGEX
+temp_gpg_homedir="$(mktemp -d)"
+declare -A gpg_regex
 
-gpg --quiet --homedir "${TEMP_GPG_HOMEDIR}" --import "${LOCAL_PUBLIC_KEY_FILE}"
-readarray -t GPG_KEY_IDS < <(gpg --homedir "${TEMP_GPG_HOMEDIR}" --with-colons --list-keys | grep -A1 "^pub:" | grep "^fpr:" | cut -d: -f10)
+gpg --quiet --homedir "${temp_gpg_homedir}" --import "${local_public_key_file}"
+readarray -t gpg_key_ids < <(gpg --homedir "${temp_gpg_homedir}" --with-colons --list-keys | grep -A1 "^pub:" | grep "^fpr:" | cut -d: -f10)
 
-for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
-    COLONS_OUTPUT="$(gpg --homedir "${TEMP_GPG_HOMEDIR}" --with-colons --list-keys "${SINGLE_GPG_KEY_ID}")"
-    GPG_REGEX[$SINGLE_GPG_KEY_ID]="$(
+for single_gpg_key_id in "${gpg_key_ids[@]}"; do
+    colons_output="$(gpg --homedir "${temp_gpg_homedir}" --with-colons --list-keys "${single_gpg_key_id}")"
+    gpg_regex[$single_gpg_key_id]="$(
         paste -d '|' -s <(
             paste -d '|' -s <(
-                grep "^fpr:" <<<"${COLONS_OUTPUT}" | cut -d: -f10
-                grep "^fpr:" <<<"${COLONS_OUTPUT}" | cut -d: -f10 | grep -Eo "^.{50}"
-                grep -e "^pub:" -e "^sub:" <<<"${COLONS_OUTPUT}" | cut -d: -f5
-                grep -e "^pub:" -e "^sub:" <<<"${COLONS_OUTPUT}" | cut -d: -f5 | grep -Eo ".{8}$"
+                grep "^fpr:" <<<"${colons_output}" | cut -d: -f10
+                grep "^fpr:" <<<"${colons_output}" | cut -d: -f10 | grep -Eo "^.{50}"
+                grep -e "^pub:" -e "^sub:" <<<"${colons_output}" | cut -d: -f5
+                grep -e "^pub:" -e "^sub:" <<<"${colons_output}" | cut -d: -f5 | grep -Eo ".{8}$"
             ) | sed -e 's/^/(/' -e 's/$/)/' -e 's/^/(0x|)/'
-            grep "^uid:" <<<"${COLONS_OUTPUT}" | cut -d: -f10 | awk -F'[<>]' '{print $2}' | paste -d '|' -s -  | tr -d '\n'
+            grep "^uid:" <<<"${colons_output}" | cut -d: -f10 | awk -F'[<>]' '{print $2}' | paste -d '|' -s -  | tr -d '\n'
     ) | sed -e 's/^/(/' -e 's/$/)/')"
 done
 
-gpgconf --homedir "${TEMP_GPG_HOMEDIR}" --kill all
+gpgconf --homedir "${temp_gpg_homedir}" --kill all
 
 cat <<EOF
 location ~ "^/([A-F0-9]{40}|[0-9A-F]{50})\.asc\$" {
     add_header content-disposition "attachment; filename=\$1.asc";
     default_type application/pgp-keys;
-    root ${NGINX_KEYS_WEBROOT};
+    root ${nginx_keys_webroot};
 }
 
 location = /pks/lookup {
@@ -85,11 +85,11 @@ location = /pks/lookup {
     }
 EOF
 
-for SINGLE_GPG_KEY_ID in "${GPG_KEY_IDS[@]}"; do
+for single_gpg_key_id in "${gpg_key_ids[@]}"; do
     cat <<EOF
 
-    if (\$query_string ~* "^(.+&)*search=${GPG_REGEX[$SINGLE_GPG_KEY_ID]}(&.+)*\$") {
-        return 301 /${SINGLE_GPG_KEY_ID}.asc;
+    if (\$query_string ~* "^(.+&)*search=${gpg_regex[$single_gpg_key_id]}(&.+)*\$") {
+        return 301 /${single_gpg_key_id}.asc;
     }
 EOF
 
