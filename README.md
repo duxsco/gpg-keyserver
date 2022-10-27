@@ -78,7 +78,7 @@ You can visualise the regex in the `if` condition at [Debuggex](https://www.debu
 You can retrieve a GnuPG public key from `HKPS` using e-mail addresses:
 
 ```bash
-gpg --auto-key-locate hkps://keys.example.org --locate-external-keys maria.musterfrau@example.org work@example.org
+gpg --auto-key-locate clear,hkps://keys.example.org --locate-external-keys maria.musterfrau@example.org work@example.org
 ```
 
 ... or via hexadecimal identifiers with/without `0x` prefix and, of course, without whitespace:
