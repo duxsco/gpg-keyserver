@@ -56,7 +56,7 @@ done
 gpgconf --homedir "${temp_gpg_homedir}" --kill all
 
 cat <<EOF
-location ~ "^/([A-F0-9]{40}|[0-9A-F]{50})\.asc\$" {
+location ~ "^/([0-9A-F]{40}|[0-9A-F]{50})\.asc\$" {
     add_header content-disposition "attachment; filename=\$1.asc";
     default_type application/pgp-keys;
     root ${nginx_keys_webroot};
