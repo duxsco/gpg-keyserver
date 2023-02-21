@@ -14,6 +14,8 @@ brew install bash
 
 ## Creation of Nginx config
 
+A sample Nginx configuration is available in the [nginx_example_config](https://github.com/duxsco/gpg-keyserver/tree/main/nginx_example_config) subfolder. The output of `nginx2nginx.sh` needs to be added to said sample config. Beware that I reduced Nginx modules to the bare minimum. Depending on the modules in use on your server, you need to take additional measures.
+
 ```bash
 bash hkps2nginx.sh -h
 
